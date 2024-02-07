@@ -2,10 +2,14 @@
 Tracks the privacy of every known Roblox deployment channel 24/7.
 
 # How to use?
-● Install the latest version of Node.js.\n
-● Download the tracker.\n
-● Extract the tracker.\n
-● Run "INSTALL PACKAGES" first (and once).\n
+● Install the latest version of Node.js.
+
+● Download the tracker.
+
+● Extract the tracker.
+
+● Run "INSTALL PACKAGES" first (and once).
+
 ● After the packages got installed, close that, and open "START" to get tracker started.
 
 # Credits
