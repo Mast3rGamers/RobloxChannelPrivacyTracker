@@ -4,7 +4,6 @@ const request = require("request-promise");
 const config = require("./config.json");
 
 var client = null;
-var channelList = null;
 
 if (config.webhookId && config.webhookToken) {
     client = new WebhookClient({id: config.webhookId, token: config.webhookToken});
@@ -21,16 +20,15 @@ const checkChannel = (channel) => {
 
             if (publicChannels.get(channel)) return null;
 
+            publicChannels.set(channel, "public");
             if (client) client.send(`[${channel}] CHANNEL IS PUBLIC!`);
             console.log(`[${channel}] Channel is public!`);
-
-            publicChannels.set(channel, "public");
         } catch (err) {
             if (err.response.statusCode == 401 && publicChannels.get(channel)) {
                 publicChannels.delete(channel);
                 if (client) client.send(`||@everyone|| [${channel}] CHANNEL IS NOW PRIVATE!`);
+                console.log(`[${channel}] CHANNEL IS NOW PRIVATE!`);
             }
-            return;
         } finally {
             resolve();
         }
@@ -41,13 +39,15 @@ const checkChannel = (channel) => {
     console.log("RbxChannelPrivacyHunter.js\n.:Developer: @Mast3rGamers:.\n");
 
     while (true) {
-        channelList = await request.get("https://raw.githubusercontent.com/bluepilledgreat/Roblox-DeployHistory-Tracker/main/ChannelsAll.json", { json: true });
-        for (let channel of channelList) {
-            await checkChannel(channel.toLocaleLowerCase());
-        }
-
-        channelList = null;
+        let channelList = await request.get("https://raw.githubusercontent.com/bluepilledgreat/Roblox-DeployHistory-Tracker/main/ChannelsAll.json", { json: true });
+        let checkPromises = []
         
+        for (let channel of channelList) {
+            const resultPromise = await checkChannel(channel.toLocaleLowerCase());
+            checkPromises.push(resultPromise);
+        }
+        
+        await Promise.all(checkPromises);
         await new Promise((resolve, reject) => { setTimeout(resolve, 11000) });
     }
 })();
