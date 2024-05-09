@@ -9,6 +9,7 @@ if (config.webhookId && config.webhookToken) {
     client = new WebhookClient({id: config.webhookId, token: config.webhookToken});
 }
 
+const binaryTypes = ["WindowsPlayer", "WindowsStudio", "WindowsStudio64", "MacPlayer", "MacStudio", "AndroidPlayer", "iOSPlayer"];
 const publicChannels = new Map();
 
 const checkChannel = (channel) => {
@@ -20,9 +21,27 @@ const checkChannel = (channel) => {
 
             if (publicChannels.get(channel)) return null;
 
+            var versionsDetails = "";
+
+            for (let binaryType of binaryTypes) {
+                try {
+                    const binaryReleaseInfo = await request.get(`https://clientsettings.roblox.com/v2/client-version/${binaryType}/channel/${channel}`, {
+                        headers: {
+                            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
+                        },
+                        json: true
+                    });
+
+                    versionsDetails += `\n- ${binaryType}: ${binaryReleaseInfo.clientVersionUpload} (${binaryReleaseInfo.version})`;
+                } catch (err) {
+                    versionsDetails += `\n- ${binaryType}: unavailable.`;
+                }
+            }
+
+            if (client) client.send(`[${channel}] CHANNEL IS PUBLIC!${versionsDetails}`);
+            console.log(`[${channel}] Channel is public!${versionsDetails}`);
+
             publicChannels.set(channel, "public");
-            if (client) client.send(`[${channel}] CHANNEL IS PUBLIC!`);
-            console.log(`[${channel}] Channel is public!`);
         } catch (err) {
             if (err.response.statusCode == 401 && publicChannels.get(channel)) {
                 publicChannels.delete(channel);
